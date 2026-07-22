@@ -554,6 +554,25 @@ function App() {
     return () => window.removeEventListener("popstate", syncPath);
   }, []);
 
+  // Ao carregar a home com um hash (ex.: vindo de /quem-somos → "/#aplicacoes"),
+  // o navegador tenta rolar antes da seção existir. Rolamos após a renderização,
+  // com retry para esperar o layout do hero/vídeo assentar.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    let tries = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (tries++ < 12) {
+        setTimeout(tryScroll, 80);
+      }
+    };
+    const t = setTimeout(tryScroll, 120);
+    return () => clearTimeout(t);
+  }, []);
+
   const activeProduct = getProductByPath(path);
   const isAboutPage = path === "/quem-somos";
   const isContactPage = path === "/contato";
